@@ -1,13 +1,10 @@
-const db = require("./db");
+const { default: db } = require("./db.ts");
+
 
 module.exports = {
   Query: {
     tasks: async () => {
-      const tasks = await db("tasks");
-      return tasks.map(async (t) => {
-        const result = await db("tasks").where("id", t.id).first();
-        return result;
-      });
+      return await db("tasks").select("*");
     },
   },
 
