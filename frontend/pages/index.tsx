@@ -2,7 +2,6 @@ import { useEffect, useState } from "react";
 
 interface Task {
   id: string;
-  optimisticId?: string;
   title: string;
   completed: boolean;
 }
@@ -23,12 +22,14 @@ export default function Home() {
       }),
     });
     const data = await res.json();
-    
+
     setTasks(data.data.tasks);
   };
 
   const addTask = async () => {
     const title = prompt("Task?");
+    if (!title) return;
+
     await fetch("/api/graphql", {
       method: "POST",
       body: JSON.stringify({
@@ -36,9 +37,12 @@ export default function Home() {
       }),
       headers: { "Content-Type": "application/json" },
     });
+
+    await fetchTasks();
   };
 
   const toggleTask = async (id: string) => {
+
     await fetch("/api/graphql", {
       method: "POST",
       body: JSON.stringify({
@@ -46,6 +50,8 @@ export default function Home() {
       }),
       headers: { "Content-Type": "application/json" },
     });
+
+    await fetchTasks();
   };
 
   return (
