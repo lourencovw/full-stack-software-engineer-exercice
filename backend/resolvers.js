@@ -4,7 +4,7 @@ const { default: db } = require("./db.ts");
 module.exports = {
   Query: {
     tasks: async () => {
-      return await db("tasks").select("*");
+      return await db("tasks").select("*").orderBy("id", "asc");
     },
   },
 
