@@ -1,19 +1,31 @@
 import { useEffect, useState } from "react";
 
+interface Task {
+  id: string;
+  optimisticId?: string;
+  title: string;
+  completed: boolean;
+}
+
 export default function Home() {
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
 
   useEffect(() => {
-    fetch("/api/graphql", {
+    fetchTasks();
+  }, []);
+
+  const fetchTasks = async () => {
+    const res = await fetch("/api/graphql", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         query: `{ tasks { id title completed } }`,
       }),
-    })
-      .then((res) => res.json())
-      .then((data) => setTasks(data.data.tasks));
-  });
+    });
+    const data = await res.json();
+    
+    setTasks(data.data.tasks);
+  };
 
   const addTask = async () => {
     const title = prompt("Task?");
