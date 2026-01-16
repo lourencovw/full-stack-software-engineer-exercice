@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import styles from "./Home.module.css";
 
 interface Task {
   id: string;
@@ -72,20 +73,29 @@ export default function Home() {
   };
 
   return (
-    <div>
-      <h1>Tasks</h1>
-      <p>Click to complete the task</p>
-      <button onClick={addTask}>Add</button>
+    <div className={styles.container}>
+      <h1 className={styles.title}>Tasks</h1>
+      <p className={styles.subtitle}>Click a task to mark it as completed</p>
 
-      {tasks?.map((t: any) => (
-        <div
-          key={t.id}
-          onClick={() => toggleTask(t.id)}
-          style={{ cursor: "pointer" }}
-        >
-          {t.title} — {t.completed ? "Done" : "Pending"}
-        </div>
-      ))}
+      <button className={styles.addButton} onClick={addTask}>
+        + Add Task
+      </button>
+
+      <div className={styles.list}>
+        {tasks.map((t) => (
+          <div
+            key={t.id}
+            onClick={() => toggleTask(t.id)}
+            className={`${styles.task} ${t.completed ? styles.taskCompleted : ""
+              }`}
+          >
+            <span>{t.title}</span>
+            <span className={styles.status}>
+              {t.completed ? "✓ Done" : "• Pending"}
+            </span>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
