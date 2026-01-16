@@ -17,15 +17,12 @@ interface ToggleTaskArgs {
 export const resolvers = {
   Query: {
     tasks: async (): Promise<Task[]> => {
-      return await db<Task>("tasks").select("*");     
+      return await db<Task>("tasks").select("*").orderBy("id", "asc");     
     },
   },
 
   Mutation: {
-    createTask: async (
-      _: unknown,
-      { title }: CreateTaskArgs
-    ): Promise<Task> => {
+    createTask: async (_: unknown,{ title }: CreateTaskArgs): Promise<Task> => {
       const [task] = await db<Task>("tasks")
         .insert({ title, completed: false })
         .returning("*");
@@ -33,10 +30,7 @@ export const resolvers = {
       return task;
     },
 
-    toggleTask: async (
-      _: unknown,
-      { id }: ToggleTaskArgs
-    ): Promise<Task> => {
+    toggleTask: async (_: unknown,{ id }: ToggleTaskArgs): Promise<Task> => {
       const task = await db<Task>("tasks")
         .where({ id })
         .first();
