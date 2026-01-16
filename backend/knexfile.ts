@@ -28,8 +28,7 @@ export const config: { development: Knex.Config} = {
     pool: {
       min: POOL_MIN,
       max: POOL_MAX,
-      // async afterCreate(conn: any, done: any) {
-      async afterCreate(conn, done) {
+      async afterCreate(conn: any, done: any) {
         try {
           await conn.query(`SET timezone = 'UTC'`);
           done(null, conn);
