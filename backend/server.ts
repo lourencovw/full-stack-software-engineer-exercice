@@ -1,7 +1,7 @@
-const express = require("express");
-const { ApolloServer } = require("apollo-server-express");
-const typeDefs = require("./schema");
-const resolvers = require("./resolvers");
+import { ApolloServer } from "apollo-server-express";
+import express from "express";
+import { typeDefs } from "./schema.ts";
+import { resolvers } from "./resolvers.ts";
 
 async function start() {
   const app = express();

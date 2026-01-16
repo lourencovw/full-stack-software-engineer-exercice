@@ -2,12 +2,13 @@
   "name": "task-manager-backend",
   "version": "1.0.0",
   "description": "Backend for Task Manager assessment",
-  "main": "server.js",
+  "main": "server.ts",
+  "type": "module",
   "scripts": {
-    "start": "node server.js",
+    "start": "node server.ts",
     "migrate": "knex migrate:latest",
     "seed": "knex seed:run",
-    "dev": "node server.js"
+    "dev": "node server.ts"
   },
   "dependencies": {
     "apollo-server-express": "^3.13.0",

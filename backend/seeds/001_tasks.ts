@@ -1,8 +1,6 @@
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
-exports.seed = async function (knex) {
+import type { Knex } from "knex";
+
+export async function seed(knex: Knex): Promise<void> {
   // Deletes ALL existing entries
   await knex("tasks").del();
 
@@ -14,4 +12,4 @@ exports.seed = async function (knex) {
     { title: "Build frontend with Next.js", completed: false },
     { title: "Debug and fix issues", completed: false },
   ]);
-};
+}

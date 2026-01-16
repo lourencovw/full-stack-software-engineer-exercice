@@ -1,4 +1,4 @@
-import { Knex } from "knex";
+import { type Knex } from "knex";
 
 const cpuCores = Number(process.env.DB_CPU_CORES) || 2;
 
@@ -9,7 +9,7 @@ const recommendedPoolSize = cpuCores * 2;
 const POOL_MIN = Math.max(1, Math.floor(recommendedPoolSize / 2));
 const POOL_MAX = Math.max(2, Math.min(recommendedPoolSize, 30));
 
-export const config: { development: Knex.Config } = {
+export const config: { development: Knex.Config} = {
   development: {
     client: "pg",
     connection: {
@@ -28,7 +28,8 @@ export const config: { development: Knex.Config } = {
     pool: {
       min: POOL_MIN,
       max: POOL_MAX,
-      async afterCreate(conn: any, done: any) {
+      // async afterCreate(conn: any, done: any) {
+      async afterCreate(conn, done) {
         try {
           await conn.query(`SET timezone = 'UTC'`);
           done(null, conn);

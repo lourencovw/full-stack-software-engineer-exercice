@@ -1,5 +1,5 @@
 import knex from "knex";
-import { config } from "./knexfile.js";
+import { config } from "./knexfile.ts";
 
 const db = knex(config.development);
 
@@ -18,4 +18,4 @@ const shutdown = async () => {
 process.on("SIGINT", shutdown);
 process.on("SIGTERM", shutdown);
 
-module.exports = db;
+export default db;
