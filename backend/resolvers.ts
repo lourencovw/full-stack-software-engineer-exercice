@@ -23,14 +23,26 @@ export const resolvers = {
 
   Mutation: {
     createTask: async (_: unknown,{ title }: CreateTaskArgs): Promise<Task> => {
+      if (!title || title.trim().length === 0) {
+        throw new Error("Title is required");
+      }
+
+      if (title.length > 255) {
+        throw new Error("Title must be 255 characters or less");
+      }
+
       const [task] = await db<Task>("tasks")
-        .insert({ title, completed: false })
+        .insert({ title: title.trim(), completed: false })
         .returning("*");
 
       return task;
     },
 
     toggleTask: async (_: unknown,{ id }: ToggleTaskArgs): Promise<Task> => {
+      if (!id || id <= 0) {
+        throw new Error("Valid task ID is required");
+      }
+
       const task = await db<Task>("tasks")
         .where({ id })
         .first();
