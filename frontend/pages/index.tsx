@@ -10,16 +10,12 @@ interface Task {
 export default function Home() {
   const [tasks, setTasks] = useState<Task[]>([]);
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const errorHandler = (error: any) => {
+  function errorHandler(error: string) {
     console.error("Error:", error);
     alert("An error occurred: " + error);
   }
 
-  const fetchTasks = async () => {
+  async function fetchTasks() {
     const res = await fetch("/api/graphql", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -36,6 +32,10 @@ export default function Home() {
 
     setTasks(data.data.tasks);
   };
+
+  useEffect(() => {
+    fetchTasks();
+  }, []);
 
   const addTask = async () => {
     const title = prompt("Task?");
