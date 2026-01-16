@@ -9,7 +9,7 @@ const recommendedPoolSize = cpuCores * 2;
 const POOL_MIN = Math.max(1, Math.floor(recommendedPoolSize / 2));
 const POOL_MAX = Math.max(2, Math.min(recommendedPoolSize, 30));
 
-export const config: { development: Knex.Config} = {
+export default  {
   development: {
     client: "pg",
     connection: {
@@ -20,10 +20,12 @@ export const config: { development: Knex.Config} = {
       database: process.env.DB_NAME || "taskdb",
     },
     migrations: {
-      directory: "./migrations",
+      extension: "ts",
+      directory: "../database/migrations",
     },
     seeds: {
-      directory: "./seeds",
+      extension: "ts",
+      directory: "../database/seeds",
     },
     pool: {
       min: POOL_MIN,

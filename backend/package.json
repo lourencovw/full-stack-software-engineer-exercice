@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "start": "node server.ts",
-    "migrate": "knex migrate:latest",
-    "seed": "knex seed:run",
+    "migrate": "knex migrate:latest --knexfile ./config/knexfile.ts",
+    "seed": "knex seed:run --knexfile ./config/knexfile.ts",
     "dev": "node server.ts",
     "test": "jest"
   },

@@ -1,6 +1,5 @@
 import knex from "knex";
-import { config } from "./knexfile.ts";
-
+import config from "./knexfile.ts";
 const db = knex(config.development);
 
 // Global error handling
