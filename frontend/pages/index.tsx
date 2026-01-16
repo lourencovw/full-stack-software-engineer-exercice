@@ -14,6 +14,11 @@ export default function Home() {
     fetchTasks();
   }, []);
 
+  const errorHandler = (error: any) => {
+    console.error("Error:", error);
+    alert("An error occurred: " + error);
+  }
+
   const fetchTasks = async () => {
     const res = await fetch("/api/graphql", {
       method: "POST",
@@ -24,6 +29,11 @@ export default function Home() {
     });
     const data = await res.json();
 
+    const hasErrors = data.errors && data.errors.length > 0;
+    if (hasErrors) {
+      return errorHandler(data.errors[0].message);
+    }
+
     setTasks(data.data.tasks);
   };
 
@@ -31,7 +41,7 @@ export default function Home() {
     const title = prompt("Task?");
     if (!title) return;
 
-    await fetch("/api/graphql", {
+    const res = await fetch("/api/graphql", {
       method: "POST",
       body: JSON.stringify({
         query: `
@@ -47,13 +57,19 @@ export default function Home() {
       }),
       headers: { "Content-Type": "application/json" },
     });
+    const data = await res.json();
+
+    const hasErrors = data.errors && data.errors.length > 0;
+    if (hasErrors) {
+      return errorHandler(data.errors[0].message);
+    }
 
     await fetchTasks();
   };
 
   const toggleTask = async (id: string) => {
 
-    await fetch("/api/graphql", {
+    const res = await fetch("/api/graphql", {
       method: "POST",
       body: JSON.stringify({
         query: `
@@ -68,6 +84,12 @@ export default function Home() {
       }),
       headers: { "Content-Type": "application/json" },
     });
+    const data = await res.json();
+
+    const hasErrors = data.errors && data.errors.length > 0;
+    if (hasErrors) {
+      return errorHandler(data.errors[0].message);
+    }
 
     await fetchTasks();
   };
@@ -75,7 +97,7 @@ export default function Home() {
   return (
     <div className={styles.container}>
       <h1 className={styles.title}>Tasks</h1>
-      <p className={styles.subtitle}>Click a task to mark it as completed</p>
+      <p className={styles.subtitle}>Click to complete the task</p>
 
       <button className={styles.addButton} onClick={addTask}>
         + Add Task
