@@ -129,15 +129,31 @@ module.exports = nextConfig;
 
 ---
 
-### 2.6 Frontend: Proper Refetching After Mutations
+### 2.6 Frontend: Optimistic UI
 
-**Commit:** [ada5267](https://github.com/lourencovw/full-stack-software-engineer-exercice/commit/ada5267fc23ff706a4394a8b380e261b1fa29d91)  
+**Commit:** [ab628cf](https://github.com/lourencovw/full-stack-software-engineer-exercice/commit/ab628cfe126e10834b8ab869729159f880190b84)  
 **Issue:** The frontend was not properly refetching data after mutations.  
 **Root Cause:** No mechanism to refresh the task list after creating or updating tasks.  
-**Fix:** Implemented proper refetching using `fetchTasks` function:  
+**Fix:** Implemented optimistic UI:  
 
 ```typescript
-await fetchTasks();
+// Optimistic update
+const tempId = Date.now().toString();
+const optimisticTask: ITask = {
+  id: tempId,
+  title: title.trim(),
+  completed: false,
+};
+setTasks(prev => [...prev, optimisticTask]);
+
+try {
+  await api.createTask(title);
+  await fetchTasks(); // Sync with server
+} catch (error) {
+  // Revert optimistic update on error
+  setTasks(prev => prev.filter(task => task.id !== tempId));
+  errorHandler(error);
+}
 ```
 
 ---
@@ -157,18 +173,14 @@ The small compilation overhead and additional boilerplate are worth the massive 
 
 ---
 
-### Why Re-fetching Over Optimistic UI?
+### Why Optimistic Over Pessimistic UI?
 
-**Decision:** Chose server re-fetching instead of optimistic UI updates.
+**Decision:** Chose optimistic instead of pessimistic updates.
 
-**Reasoning:**
-
-- **Data Consistency:** Always shows the true server state
-- **Simplicity:** No complex client-side state reconciliation
-- **Reliability:** Handles edge cases (validation errors, concurrent updates) gracefully
-- **Ordering:** Maintains correct sort order without client-side logic
-
-**Trade-off:** Slightly slower perceived performance vs. guaranteed correctness. For a task manager where data integrity matters more than milliseconds, this is the right choice.
+- **Single-User Scope:** No concurrent edits, so conflict risk is minimal
+- **Small Data Set:** Tasks are limited and unpaginated, making local updates safe
+- **Better UX:** Immediate feedback makes the app feel faster and more responsive
+- **Trade-off:** More complex error handling vs. improved perceived performance
 
 ---
 
@@ -181,6 +193,44 @@ The small compilation overhead and additional boilerplate are worth the massive 
 - **Simplicity:** Fetch-based approach is straightforward and sufficient for this scale
 - **Real-time Needs:** Task lists need fresh data; aggressive caching could show stale tasks
 - **Trade-off:** More network requests vs. simpler architecture
+
+---
+
+### Database Connection Pool Configuration
+
+**Decision:** Implemented optimized connection pooling with HikariCP-inspired formula.
+
+**Implementation:**
+```typescript
+const cpuCores = Number(process.env.DB_CPU_CORES) || 2;
+const recommendedPoolSize = cpuCores * 2;
+const POOL_MIN = Math.max(1, Math.floor(recommendedPoolSize / 2));
+const POOL_MAX = Math.max(2, Math.min(recommendedPoolSize, 30));
+
+pool: {
+  min: POOL_MIN,
+  max: POOL_MAX,
+  async afterCreate(conn: any, done: any) {
+    try {
+      await conn.query(`SET timezone = 'UTC'`);
+      done(null, conn);
+    } catch (err) {
+      done(err, conn);
+    }
+  },
+}
+```
+
+**Reasoning:**
+- **Performance:** Dynamic pool sizing based on CPU cores prevents resource waste
+- **Reliability:** Connection validation ensures healthy connections
+- **Consistency:** UTC timezone setting prevents date/time issues
+- **Error Handling:** Proper connection creation error handling
+
+**Trade-offs:**
+- **Memory vs Performance:** Higher pool size uses more memory but reduces connection overhead
+- **Complexity vs Reliability:** Added validation logic vs simple connection reuse
+- **Resource Management:** Bounded pool prevents connection exhaustion but may queue requests under high load
 
 ---
 
@@ -285,7 +335,58 @@ npm test
 - Type safety across the stack
 - Improved developer experience with better tooling
 - Easier maintenance and refactoring
+
 ---
+
+### Extra 5: Frontend Architecture Improvements
+
+**Implementation:** Restructured frontend with better organization and component architecture:
+
+```
+frontend/
+├── api/
+│   └── tasks.ts              # API layer with all GraphQL calls
+├── components/
+│   └── TaskItem.tsx          # Reusable TaskItem component with React.memo
+├── pages/
+│   ├── Home.module.css       # CSS modules for styling
+│   └── index.tsx             # Main page with optimized hooks
+└── types/
+    └── task.ts               # Shared TypeScript interfaces
+```
+
+**Key Improvements:**
+
+1. **API Layer Separation:**
+   - Extracted all GraphQL calls to `api/tasks.ts`
+   - Centralized error handling
+   - Reusable API functions across components
+
+2. **Component Architecture:**
+   - Created reusable `TaskItem` component with `React.memo`
+   - Proper prop interfaces for type safety
+   - Optimized re-renders with `useCallback`
+
+3. **Performance Optimizations:**
+   - Implemented optimistic UI updates
+   - Used `React.memo` to prevent unnecessary re-renders
+   - Memoized event handlers with `useCallback`
+   - Proper dependency arrays in `useEffect`
+
+4. **Code Organization:**
+   - Separated concerns (API, UI, styling)
+   - Consistent file naming conventions
+   - TypeScript interfaces for better maintainability
+
+**Benefits:**
+- **Maintainability:** Clear separation of concerns
+- **Performance:** Optimized rendering with memoization
+- **Reusability:** Components can be easily reused
+- **Type Safety:** Full TypeScript coverage
+- **Scalability:** Easy to add new features and components
+
+---
+
 ## Summary
 
 ### Required Tasks Completed:
@@ -302,7 +403,8 @@ npm test
 🎁 **UI/UX:** Modern, professional interface with CSS modules  
 🎁 **Architecture:** AdonisJS-like folder structure for maintainability  
 🎁 **Testing:** Comprehensive Jest test suite with 100% controller coverage  
-🎁 **TypeScript:** Full migration for type safety and better DX
+🎁 **TypeScript:** Full migration for type safety and better DX  
+🎁 **Frontend Structure:** Improved component architecture and API layer separation
 
 ### Production Considerations:
 
