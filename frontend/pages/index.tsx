@@ -1,98 +1,49 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import styles from "./Home.module.css";
-
-interface Task {
-  id: string;
-  title: string;
-  completed: boolean;
-}
+import { TaskItem } from "../components/TaskItem";
+import * as api from "../api/tasks";
+import { ITask } from "../types/task";
 
 export default function Home() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<ITask[]>([]);
 
-  function errorHandler(error: string) {
-    console.error("Error:", error);
+  const errorHandler = (error: unknown) => {
     alert("An error occurred: " + error);
-  }
-
-  async function fetchTasks() {
-    const res = await fetch("/api/graphql", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        query: `{ tasks { id title completed } }`,
-      }),
-    });
-    const data = await res.json();
-
-    const hasErrors = data.errors && data.errors.length > 0;
-    if (hasErrors) {
-      return errorHandler(data.errors[0].message);
-    }
-
-    setTasks(data.data.tasks);
   };
+
+  const fetchTasks = useCallback(async () => {
+    try {
+      const tasks = await api.fetchTasks();
+      setTasks(tasks);
+    } catch (error: unknown) {
+      errorHandler(error);
+    }
+  }, []);
 
   useEffect(() => {
     fetchTasks();
-  }, []);
+  }, [fetchTasks]);
 
-  const addTask = async () => {
+  const addTask = useCallback(async () => {
     const title = prompt("Task?");
     if (!title) return;
 
-    const res = await fetch("/api/graphql", {
-      method: "POST",
-      body: JSON.stringify({
-        query: `
-        mutation CreateTask($title: String!) {
-          createTask(title: $title) {
-            id
-            title
-            completed
-          }
-        }
-      `,
-        variables: { title },
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
-    const data = await res.json();
-
-    const hasErrors = data.errors && data.errors.length > 0;
-    if (hasErrors) {
-      return errorHandler(data.errors[0].message);
+    try {
+      await api.createTask(title);
+      await fetchTasks();
+    } catch (error) {
+      errorHandler(error);
     }
+  }, [fetchTasks]);
 
-    await fetchTasks();
-  };
-
-  const toggleTask = async (id: string) => {
-
-    const res = await fetch("/api/graphql", {
-      method: "POST",
-      body: JSON.stringify({
-        query: `
-        mutation ToggleTask($id: ID!) {
-          toggleTask(id: $id) {
-            id
-            completed
-          }
-        }
-      `,
-        variables: { id },
-      }),
-      headers: { "Content-Type": "application/json" },
-    });
-    const data = await res.json();
-
-    const hasErrors = data.errors && data.errors.length > 0;
-    if (hasErrors) {
-      return errorHandler(data.errors[0].message);
+  const handleToggleTask = useCallback(async (id: string) => {
+    try {
+      await api.toggleTask(id);
+      await fetchTasks();
+    } catch (error) {
+      errorHandler(error);
     }
-
-    await fetchTasks();
-  };
+  }, [fetchTasks]);
 
   return (
     <div className={styles.container}>
@@ -105,17 +56,7 @@ export default function Home() {
 
       <div className={styles.list}>
         {tasks.map((t) => (
-          <div
-            key={t.id}
-            onClick={() => toggleTask(t.id)}
-            className={`${styles.task} ${t.completed ? styles.taskCompleted : ""
-              }`}
-          >
-            <span>{t.title}</span>
-            <span className={styles.status}>
-              {t.completed ? "✓ Done" : "• Pending"}
-            </span>
-          </div>
+          <TaskItem key={t.id} task={t} onToggle={handleToggleTask} />
         ))}
       </div>
     </div>
