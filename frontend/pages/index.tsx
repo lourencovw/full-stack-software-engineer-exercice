@@ -28,19 +28,39 @@ export default function Home() {
     const title = prompt("Task?");
     if (!title) return;
 
+    // Optimistic update
+    const tempId = Date.now().toString();
+    const optimisticTask: ITask = {
+      id: tempId,
+      title: title.trim(),
+      completed: false,
+    };
+    setTasks(prev => [...prev, optimisticTask]);
+
     try {
       await api.createTask(title);
-      await fetchTasks();
+      await fetchTasks(); // Sync with server
     } catch (error) {
+      // Revert optimistic update on error
+      setTasks(prev => prev.filter(task => task.id !== tempId));
       errorHandler(error);
     }
   }, [fetchTasks]);
 
   const handleToggleTask = useCallback(async (id: string) => {
+    // Optimistic update
+    setTasks(prev => prev.map(task => 
+      task.id === id ? { ...task, completed: !task.completed } : task
+    ));
+
     try {
       await api.toggleTask(id);
-      await fetchTasks();
+      await fetchTasks(); // Sync with server
     } catch (error) {
+      // Revert optimistic update on error
+      setTasks(prev => prev.map(task => 
+        task.id === id ? { ...task, completed: !task.completed } : task
+      ));
       errorHandler(error);
     }
   }, [fetchTasks]);
