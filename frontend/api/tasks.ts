@@ -1,10 +1,6 @@
-interface Task {
-  id: string;
-  title: string;
-  completed: boolean;
-}
+import { ITask } from "../types/task";
 
-export const fetchTasks = async (): Promise<Task[]> => {
+export const fetchTasks = async (): Promise<ITask[]> => {
   const res = await fetch("/api/graphql", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -21,7 +17,7 @@ export const fetchTasks = async (): Promise<Task[]> => {
   return data.data.tasks;
 };
 
-export const createTask = async (title: string): Promise<Task> => {
+export const createTask = async (title: string): Promise<ITask> => {
   const res = await fetch("/api/graphql", {
     method: "POST",
     body: JSON.stringify({
@@ -47,7 +43,7 @@ export const createTask = async (title: string): Promise<Task> => {
   return data.data.createTask;
 };
 
-export const toggleTask = async (id: string): Promise<Task> => {
+export const toggleTask = async (id: string): Promise<ITask> => {
   const res = await fetch("/api/graphql", {
     method: "POST",
     body: JSON.stringify({
